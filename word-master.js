@@ -90,6 +90,7 @@ console.log("validWord??", validWord);
     if (currentGuess === word) {
         //win
         alert('You win!')
+        document.querySelector('.brand').classList.add("winner");
         done = true;
         return;
     } else if (currentRow === ROUNDS) {
