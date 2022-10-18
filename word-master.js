@@ -89,7 +89,6 @@ console.log("validWord??", validWord);
     // win or loose? donknow why? BG color change to green after alert!!
     if (currentGuess === word) {
         //win
-        console.log('win')
         alert('You win!')
         done = true;
         return;
@@ -106,7 +105,14 @@ function backspace() {
 }
 
 function markInvalidWord() {
-    alert('not a valid word!');
+    // alert('not a valid word!');
+    for (let i = 0 ; i < ANSWER_LENGTH; i++) {
+        letters[currentRow * ANSWER_LENGTH + i].classList.remove("invalid");
+
+        setTimeout(function (){
+        letters[currentRow * ANSWER_LENGTH + i].classList.add("invalid");
+        }, 10);
+    }
 }
 
 //getting key board value
