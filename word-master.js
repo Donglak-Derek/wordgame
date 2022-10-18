@@ -1,17 +1,24 @@
 const letters = document.querySelectorAll('.scoreboard-letter');
 const loadingDiv = document.querySelector('.info-bar');
 const ANSWER_LENGTH = 5 //All capital letter?, cause not gonna changed 
+const ROUNDS = 6;
+
 
 async function init() {
     let currentGuess = ''; // this is what user input
     let currentRow = 0;
+    let isLoading = true;
+
 
     const res = await fetch("https://words.dev-apis.com/word-of-the-day") //?random=1
     const resObj = await res.json();
     const word = resObj.word.toUpperCase();
 // const { word } = await res.json(); in one line
     const wordParts = word.split(""); // this is the answer
+    let done = false;
 
+    setLoading(false);
+    isLoading = false;
     console.log(wordParts)
 
 function addLetter (letter) {
@@ -22,6 +29,7 @@ function addLetter (letter) {
         // replace the last letter
         currentGuess = currentGuess.substring(0, currentGuess.length - 1) + letter;
     }
+
     letters[ANSWER_LENGTH * currentRow + currentGuess.length - 1].innerText = letter;
 }
 
@@ -31,12 +39,30 @@ async function commit() {
         return;
     }
 
-    // TODO validate the word
+    
+    //  validate the word
+    isLoading = true;
+    setLoading(true);
+    const res = await fetch("https://words.dev-apis.com/validate-word", {
+        method: "POST",
+        body: JSON.stringify({ word: currentGuess})
+    });
 
-    // TODO do all the making ad :"cocrrect", "colose" or "wrong"
+    const resObj = await res.json();
+    const validWord = resObj.validWord;
+    // const { validWord } = resObj;
+console.log("validWord??", validWord);
+    isLoading = false;
+    setLoading(false);
+
+    if (validWord == false) {
+        markInvalidWord();
+        return;
+    }
+    //  do all the making ad :"cocrrect", "colose" or "wrong"
     const guessParts = currentGuess.split(""); // user input
     const map = makeMap(wordParts);
- console.log("map", map)
+    console.log("map", map)
 
 
     for (let i=0; i < ANSWER_LENGTH; i++) {
@@ -44,28 +70,34 @@ async function commit() {
         if (guessParts[i] === wordParts[i]) {
             letters[currentRow * ANSWER_LENGTH + i].classList.add("correct");
             map[guessParts[i]]--;
-            decodeURIComponent
         }
     }
 
     for (let i=0; i < ANSWER_LENGTH; i++) {
         //mark as correct
         if (guessParts[i] === wordParts[i]) {
-            // Do nothing, we already go through
+            // Do nothing, we already did it
         } else if (wordParts.includes(guessParts[i]) && map[guessParts[i]] > 0) {
             // Mark as close
             letters[currentRow * ANSWER_LENGTH + i].classList.add("close");
             map[guessParts[i]]--;
         } else {
             letters[currentRow * ANSWER_LENGTH + i].classList.add("wrong");
-
         }
     }
-    // TODO did they win or loose?
-
     currentRow++;
+    // win or loose? donknow why? BG color change to green after alert!!
+    if (currentGuess === word) {
+        //win
+        console.log('win')
+        alert('You win!')
+        done = true;
+        return;
+    } else if (currentRow === ROUNDS) {
+        alert(`You lose, the word was ${word}`);
+        done = true;
+    }
     currentGuess = '';
-
 }
 
 function backspace() {
@@ -73,8 +105,18 @@ function backspace() {
     letters[ANSWER_LENGTH * currentRow + currentGuess.length].innerText = "";
 }
 
+function markInvalidWord() {
+    alert('not a valid word!');
+}
+
 //getting key board value
     document.addEventListener('keydown', function handleKeyPress (event) {
+        if (done || isLoading) {
+            //do nothing
+            return;
+        }
+
+
         const action = event.key;
 
         console.log(action)
